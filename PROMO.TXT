@@ -1,0 +1,359 @@
+1. Objectives and Design of the Language
+Speed ​​and control. The language should provide predictable execution, which implies a low level of abstraction and support for direct memory management.
+Direct work with hardware. The language should support register-level operations and low-level access to resources (RAM, I/O devices).
+Minimum Runtime. Having a minimal set of libraries to increase the possibilities of developing microcodes and drivers.
+2. Features of the Language
+Strict static type: To avoid errors and make the code as efficient as possible.
+Direct work with memory: Support for pointers, manual memory management and functions for interacting with memory.
+Compilation to machine code: The compiler should be optimized enough to create fast and compact machine code.
+Support for built-in assembler instructions for precise optimization in critical places.
+Macro system: To simplify repetitive and complex low-level operations.
+3. Compiler Core and Infrastructure
+Compiler and Assembler: A compiler needs to be developed that translates source code into assembler, and then assembler code into machine code.
+Linker: Since the OS needs precise memory layout and library management, the linker needs to be able to handle memory allocation, static libraries, and initialization.
+Debugger: An integrated debugger for analyzing errors.
+4. Low-Level Construct Language
+Pointers and Pointer Arithmetic. For example, addressing individual bytes and registers.
+Registers: Support for direct manipulation of processor registers.
+Intrinsic Instructions. Ability to embed assembler instructions.
+Boot code specification sections.
+Example of Minimal Language and Code
+Here's an example of what the syntax might look like:
+
+// Simple syntax for working with memory
+fn write_byte(ptr: *mut u8, value: u8) {
+*ptr = value;
+}
+
+// Working with processor registers
+register eax: u32;
+
+fn main() {
+eax = 0; // zeroing the register
+write_byte(0xB8000 as *mut u8, 0x41); // writing to memory
+}
+
+Tools to Get Started
+LLVM: As an intermediate layer for creating your own compiler.
+TinyCC or Clang: As a basis for a minimal compiler that can be modified.
+Next Steps:
+Determine the architecture and structure of the language.
+Develop a minimal compiler with memory management support.
+Create a minimal library of standard functions for working with memory, strings, and I/O devices.
+You can start with a simple specification and compiler.
+
+Creating a new low-level programming language, especially for the purpose of developing operating systems, kernels, and bootloaders, is a serious project that requires developing a compiler, assembler, standard library, and a debugger.
+
+Stage 1. Language Planning and Design
+Define the goals:
+Main architecture (e.g. x86, ARM).
+Targeted use: drivers, OS kernel, bootloaders, etc.
+Develop a language specification:
+Memory management operations, support for working with pointers.
+Syntax and key constructs: functions, conditionals, loops.
+Features of low-level interaction with hardware, such as register access and support for built-in assembly instructions.
+Stage 2. Compiler Creation
+Creating a compiler is one of the most difficult and time-consuming stages, so you can first make a minimal compiler with basic syntax and functionality.
+
+Choosing a compiler platform:
+
+We recommend using LLVM, a powerful framework that provides many options for creating your own compiler. LLVM can help speed up the process because it includes a low-level intermediate representation (IR) language that can be compiled to machine code.
+Write a parser and lexer:
+
+A parser must parse the syntax of the language and build an abstract syntax tree (AST).
+A lexer breaks the code down into tokens, such as keywords, operators, and identifiers.
+Write a code generator:
+
+A code generator translates the AST into LLVM's intermediate representation, or directly into assembly code if you want a compiler that is as simple and manageable as possible.
+Write a linker:
+
+A linker links all the compiled modules together and generates an executable or OS image. It can be based on an existing linker like ld, or use a simplified implementation to get started.
+Stage 3. Library for Low-Level Operations
+The base library should include a set of functions for interacting with memory, managing I/O, and possibly standard functions for working with numbers, strings, etc.
+
+Memory management functions:
+memset, memcpy, direct memory access.
+Processor registers:
+Architecture-specific functions for accessing registers.
+I/O functions:
+Direct interaction with I/O ports, if required, using inline assembler.
+Stage 4. Debugging and Infrastructure
+To ensure productive development, debugging and testing tools are needed:
+
+Tools
+
+debugging:
+A debugger that can display register contents, monitor program execution, and display segmentation faults.
+Testing tools:
+A set of tests to check the compiler and libraries. Automated testing, especially for memory, is very important.
+Minimal Compiler Example
+For a quick start, I can offer a small prototype of a Python compiler that will generate assembly code. Here is an example that translates a simple function into assembler: # Minimal compiler: parser and assembler generator def compile_code(code): if code == "fn main() { write_byte(0xB8000, 0x41); }": # Generate simple assembler for x86 asm_code = """ section .data msg db 'A' section .text global _start _start: mov eax, 0xB8000 mov [eax], byte [msg] mov eax, 1 ; exit code int 0x80 """ with open( "output.asm", "w") as f: f.write(asm_code) # Test compilation code = "fn main() { write_byte(0xB8000, 0x41); }" compile_code(code) This script creates an assembly file that can be compiled with nasm. This example is very simplified, but it illustrates how the compiler can interpret code and generate assembly output.
+
+Final Implementation Creating a full-fledged language and compiler will take a long time. However, if you start with a simple parser, lexer, and a set of low-level functions, you can gradually add new features and optimize the compiler.
+
+1. Creating a Minimal Compiler Prototype We will start by developing a simple compiler written in Python that will generate assembly code for a single architecture, such as x86.
+
+Step 1. Create a Lexer and Parser The lexer and parser transform the source code into data structures (tokens and an abstract syntax tree - AST).
+
+# Lexer: Breaks code into tokens import re def lexer(code): tokens = [] token_specification = [ ('NUMBER', r'\d+'), # Numbers ('ID', r'[A-Za-z_] [A-Za-z_0-9]*'), # Identifiers ('OP', r'[+*/-]'), # Operators ('SKIP', r'[ \t]+'), # Skips ('NEWLINE', r'\n'), # New lines ] tok_regex = '|'.join(f'(?P<{pair[0]}>{pair[1]})' for pair in token_specification) for mo in re.finditer(tok_regex, code): kind = mo.lastgroup value = mo.group() if kind != 'SKIP': tokens.append((kind, value)) return tokens # Example of using the lexer code = "fn main() { let x = 10 + 20; }" tokens = lexer(code) print(tokens) Step 2. Generating Assembler After creating the AST using the parser, we can write a function to generate the assembler. Here we will have a function for a minimal program.
+
+def compile_to_asm(ast): asm_code = """ section .text global _start _start: mov eax, 10 ; load value add eax, 20 ; add ; end program mov eax, 1 int 0x80 """ with open("output.asm ", "w") as f: f.write(asm_code) # Test compilation ast = [('MAIN', None), ('EXPR', ('NUMBER', 10)), ('EXPR', (' NUMBER', 20))] compile_to_asm(ast) 2. Creating a Library of Low-Level Functions We will write basic functions for working with memory, registers and input/output. An example is a small function that controls writing to a specified memory address.
+
+// Example of a low-level function for writing to memory void write_byte(unsigned char* address, unsigned char value) { *address = value;
+} 3. Developing a Minimal Execution Environment This environment can consist of basic functions for working with memory and supporting basic operations for the OS.
+
+section .text global _start _start: mov eax, 0xB8000 ; Memory address for the screen in text mode mov byte [eax], 'A' ; Write the character 'A' to the screen ; Terminate the program mov eax, 1 int 0x80 4. Automating the Build To simplify the build and testing, you can set up a Makefile that will automatically compile the code.
+
+# Makefile for build automation all: compile run compile: nasm -f elf64 output.asm -o output.o ld output.o -o output run: ./output Final Step: Integration and Development of a Full Compiler To create a full- fledged compiler, we need to implement a full-fledged parser, improve the code generator, and add support for more complex language constructs. This will require additional modules and, possibly, the use of more powerful tools such as LLVM.
+
+Step 1: Setting Up the Environment To get started, you will need: Python 3 for writing a simple lexer and parser.
+NASM and ld for assembling the generated assembler into an executable.
+Makefile for automating the build and testing (optional).
+
+Step 2: Creating a Lexer We will start by developing a lexer in Python that will split the code into tokens. This will simplify syntax parsing and code generation.
+
+# lexer.py import re def lexer(code): tokens = [] token_specification = [ ('NUMBER', r'\d+'), # Numbers ('ID', r'[A-Za-z_][A- Za-z_0 -9]*'), # Identifiers ('ASSIGN', r'='), # Assignment operator ('END', r';'), # End of expression ('OP', r'[+ */-]'), # Operators ('SKIP', r'[ \t]+'), # Whitespace ('NEWLINE', r'\n'), # New line ] tok_regex = '|'.join( f'(?P<{pair[0]}>{pair[1]})' for pair in token_specification) for mo in re.finditer(tok_regex, code): kind = mo.lastgroup value = mo.group() if kind != 'SKIP': tokens.append((kind, value)) return tokens # Example of using lexer code = "let x = 10 + 20; "
+tokens = lexer(code) print(tokens) Step 3: Create a Parser After the lexer, we add a simple parser that converts tokens into an abstract syntax tree (AST).
+
+#parser.py def parse(tokens): ast = [] it = iter(tokens) for token in it: kind, value = token if kind == 'ID': name = value next_token = next(it) if next_token[0] == 'ASSIGN': expr = parse_expression (it) ast.append(('ASSIGN', name, expr)) return ast def parse_expression(it): expr = [] for token in it: kind, value = token if kind == 'END': break expr. append((kind, value)) return expr # Example of using the parser tokens = lexer("let x = 10 + 20;") ast = parse(tokens) print(ast) Step 4: Generating Assembly Code Based on AST, we will write a code generator that will create assembler code for expressions.
+
+#codegen.py def generate_code(ast): asm_code = """ section.text global_start _start: """ for node in ast: if node[0] == 'ASSIGN': name, expr = node[1], node [2] asm_code += f" mov eax, {expr[0][1]}\n" if len(expr) > 2: op, val = expr[1][1], expr[2][1] if op == '+': asm_code += f" add eax, {val}\n" asm_code += " ; store result\n\n" asm_code += """ mov eax, 1 ; completion of the program int 0x80 """ with open("output.asm", "w") as f: f.write(asm_code) # Test Compilation generate_code(ast) Step 5: Automate the Build with Makefile Let's create a Makefile to build the assembler and generate the executable.
+
+all: compile run compile: python3 codegen.py nasm -f elf64 output.asm -o output.o ld output.o -o output run: ./output Run and Check Run python3 lexer.py and python3 parser.py to check the tokens and AST.
+Use make compile to build and make run to run.
+
+This is a minimal prototype of the compiler. Let's add support for other operations and gradually make it more complex if you are happy with the current structure!
+
+Manifesto for an Open and Free Programming Language for Low-Level Programming Language Name: Nucleus (NCS) Introduction The programming world, especially at the low level, requires more flexibility, openness, and accessibility than existing languages ​​​​offer. While languages ​​​​like C and Assembly have proven their importance, many of them are either overloaded or too complex for specific low-level tasks. Our language Nucleus (NCS) will be based on the principles of minimalism, clarity, and complete openness for creating operating systems, boot loaders, system libraries, and drivers.
+
+Values ​​and Core Principles of Openness and Freedom: Nucleus is a completely free and open language, designed for the public, for developers, and for communities. Every line of the compiler, interpreter, standard libraries, and all tools will be available and licensed under a free license (such as MIT or GPL).
+
+Simplicity and Transparency: Transparency and intuitiveness of the NCS syntax are key aspects. NCS code should be as readable and self-documenting as possible to reduce the barrier to entry for developers.
+
+Maximum Performance and Low Abstraction Level: Nucleus will provide developers with full control over system resources, processor registers, memory, and I/O ports. NCS will not add unnecessary abstraction layers and will compile to code close to machine instructions.
+
+Flexibility and Extensibility: The built-in modular system will allow adding new features at the language level, simplifying optimization, testing, and ensuring compatibility with different architectures and hardware platforms.
+
+Focus on Backward Compatibility: Nucleus is created with an emphasis on backward compatibility and the ability to integrate with C/C++ code, which will make it useful for migrating existing systems or supplementing them with new components.
+
+Technical Features of Nucleus Direct Access to Registers and Memory: The NCS language provides syntax constructs for direct manipulation of registers and memory segments, supporting low-level operations and providing full control over the hardware.
+
+Minimalistic Standard Library: The standard library The NCS library will include only the most essential functions for working with memory and I/O. Developers will be able to easily use C/C++ libraries for more complex tasks.
+
+Easy Access to Assembler: NCS will include built-in assembler integration capabilities. This will allow developers to insert assembler code without resorting to third-party tools or language constructs, and will also support cross-compilation.
+
+Support for Modularity and Low-Level Microkernel Approach: Nucleus will allow developers to use a microkernel approach to create modular operating systems, drivers, and bootloaders.
+
+Simple and Powerful Optimizations: Code optimization tools will be built into Nucleus and will focus on low-level tasks, such as memory management and register optimization.
+
+True Cross-Platform: Nucleus is being developed to support multiple architectures, including x86, x86_64, ARM, and RISC-V. Each project will be easily adaptable to different architectures and platforms with minimal changes to the source code.
+
+Simple Multithreading: Nucleus will offer built-in thread management and parallelism at the language level. This system will be optimized for running in OS kernels and drivers.
+
+Timing Management Mechanisms: Nucleus will include low-level timing management tools that are important for real-time applications.
+
+Nucleus Syntax and Structure 1. Basic Data Types Nucleus supports a minimal set of basic data types, such as u8, u16, u32, i8, i16, i32, as well as pointers and arrays. This will allow precise control over the size of the memory footprint and simplify optimization.
+
+2. Memory Management and Addressing NCS has a direct syntax for pointers and address arithmetic, as well as a special operator for binding variables to physical addresses.
+
+3. Inline Assembler Support The inline assembler syntax will allow you to include assembler code to manage critical operations such as access to hardware interrupts and registers.
+
+fn main() -> void { let reg_ptr: *u32 = 0xFF00ABCD;
+asm { mov eax, [reg_ptr];
+inc eax;
+mov [reg_ptr], eax;
+} } 4. Simple Interrupt Handling Nucleus will have a built-in mechanism for working with hardware interrupts, which will make it convenient for creating drivers and low-level OS modules.
+
+interrupt 0x20 handler TimerInterrupt { ; interrupt handling code } Tools and Infrastructure Nucleus Compiler: The NCS compiler will support both processor assembly and generation of code targeting-specific instructions.
+
+Build System and Package Manager: Developing a custom package manager compatible with NCS will allow integration and dependency management of low-level code.
+
+Testing and Debugging: Including a minimal debugger with symbolic information support and basic memory analysis capabilities will help developers test their code for memory leaks and other errors common to low-level programs.
+
+Project Organization and Open Development Open Development and Community Support: The project will be developed through an open repository (e.g. GitHub), where anyone can contribute, discuss changes and improvements.
+
+Documentation and Examples: An open database of documentation and examples of how to use NCS for low-level tasks will be created.
+
+Standards and Compatibility Program: The community will establish a set of standards to ensure compatibility and consistency of code. In particular, common patterns for drivers, kernel modules, and system libraries will be developed.
+
+Educational Materials: Create courses and guides for users and developers to help them learn the language faster and evolve it with the community.
+
+Conclusion The Nucleus (NCS) project is an open platform for low-level programming aimed at developers who need full control over hardware components. This programming language will be a new word in the field of low-level programming, combining flexibility, modularity, and support for the latest architectures.
+
+Is it possible to create an alternative to Assembler?
+
+Yes, creating an alternative to Assembler is an ambitious but interesting task. Assembler is a low-level language that provides almost direct access to processor instructions, and its main strength is its absolute proximity to the hardware and optimization. An alternative to Assembly could represent a new approach to programming at the lowest level, adding modern features without sacrificing performance and control. Here are some aspects that such an alternative could be built on.
+
+1. High Performance and Controllability Syntactic shortcuts: The new language could provide shorter, more intuitive constructs for working with registers, memory, inputs, and other data.
+
+dom-output and mathematical operations, simplifying routine Assembly tasks.
+Abstract Register Operations: Instead of accessing specific processor registers (EAX, EBX), you can use virtual registers or variables that the compiler will automatically map to physical registers.
+2. Simplified Memory Management Pointer Safety: For example, adding pointer types with checks can help prevent errors typical of low-level operations, such as buffer overflows or dereferencing null pointers.
+Direct Memory Access with Bounds Checks: Implementing memory access instructions with automatic boundary checking can improve the safety of program code while maintaining Assembly-level performance.
+3. Integration of High-Level Concepts Pseudo-Instructions: The language could use special pseudo-instructions that the compiler will expand into several instructions, such as mem_copy, mem_set, array_init.
+Macro extensions and built-in optimizations: An alternative language could support built-in macros and modules that are automatically optimized for the processor architecture, eliminating the need for manual optimization.
+4. Platform independence Virtual instructions: The compiler could support a virtual instruction set that would be translated into specific instructions for each target architecture. This would improve code portability while maintaining a low level of abstraction.
+Multiple processor support: The compiler and language core could support cross-compilation for different architectures, allowing the same source code to be used for different processors.
+5. Integrated Optimization Tools Compiler-level performance analysis: The compiler could automatically suggest optimizations, such as loop unrolling or branch prediction, with reports on possible code improvements.
+Manual optimization control: An experienced developer can disable automatic optimizations and control the process manually, allowing the code to be tailored to the specific hardware.
+6. Threading and Asynchrony Support Threads and interrupts at the language level: Integration of instructions for working with threads, interrupts, and asynchronous calls will facilitate the development of multi-core and multi-tasking applications, especially in drivers and OS kernels.
+Low-latency asynchronous operations: The ability to control asynchrony at the instruction level will help when working with hardware interrupts and real-time tasks.
+Sample Syntax of the New Language // Declaring a virtual register register vreg1 = 0x01;
+
+// Direct memory access with bounds checking let *buffer: u8[256] = 0x8000;
+
+// Memory copy operation via pseudo-instruction mem_copy(buffer, src, 256);
+
+// An example of a thread running at the system level thread main { // Thread code while (true) { vreg1 += 1;
+} } Potential Benefits Reduced Complexity: The new syntax could reduce the number of instructions and simplify work with hardware resources.
+Safety and Reliability: With built-in checks and improved memory and thread management capabilities, the new language could be safer and more secure than pure Assembly.
+Increased Performance with Built-in Optimizations: The new language could automatically optimize its code for different platforms and architectures.
+Creating such an alternative would require significant resources and testing, but it could combine the key benefits of Assembly with more modern programming approaches, while remaining a high-performance and flexible tool for low-level tasks.
+
+A Manifesto for an Open Low-Level Programming Language Introduction In the world of systems programming, traditional low-level languages ​​​​such as Assembly still play a vital role, especially in the development of operating systems, boot loaders, drivers, and other critical components. However, such languages ​​​​are complex, require a high level of skill, and are often prone to many errors due to their close proximity to the hardware. Our manifesto describes a vision for a new open low-level programming language that combines the power and flexibility of Assembly, but provides developers with tools that improve code safety, readability, and portability, without sacrificing performance.
+
+Core Language Principles Absolute Control over Hardware The new language should provide complete control over hardware resources, while maintaining access to processor registrations, memory, and other hardware components.
+
+Code Optimization at Compilation and Runtime The language should support automated optimization tools and manual performance management so that programmers can write the most efficient code for specific hardware.
+
+Safety and Error Protection Safety is key. A low-level language should integrate protection mechanisms (e.g. pointer control, memory bounds checking) that minimize the possibility of creating vulnerabilities.
+
+Ease of learning and efficiency Despite the low-level nature, the syntax should be convenient and intuitive so that developers can focus on solving problems, not on the complexities of the language.
+
+Openness and collaborative development The language will be open and accessible to everyone. We will create a community of developers who will jointly develop, test, and document the language.
+
+Key Technical Features Mnemonic and intuitive syntax The commands and operators of the language should be as clear and intuitive as possible, with a convenient syntax, for example: let reg1 = 0x01;
+let *mem_ptr: u8 = 0x1000;
+mem_copy(mem_ptr, data_src, size);
+Improved memory and pointer management The language's memory management system should support automatic bounds checking, prevent overflows, and provide convenient syntax for working with pointers.
+
+Platform independence via virtual instructions The language supports virtual instructions that the compiler can adapt to a specific architecture (x86, ARM, RISC-V, etc.). This will simplify code portability without reducing its performance.
+
+Native support for multitasking and asynchrony Built-in support for multithreading and interrupt management for efficient work with multitasking systems and asynchronous calls: thread main { while (true) { // Asynchronous operations } } Optimization tools and execution control The compiler will support both automatic and manual optimization for performance-critical sections of code, such as loop unrolling and branch prediction.
+
+Unique Features High-level instructions for routine operations Introducing "pseudo-instructions" (e.g. mem_copy, mem_set) that expand to multiple CPU instructions will improve readability and reduce development time.
+
+Support for modern architectures and SIMD instructions The language should support SIMD instructions for vector computing and working with multiple processors, which is critical for working with multimedia and neural networks.
+
+Powerful macro extensions and metaprogramming The language should support powerful macros that will allow developers to create templates and automate repetitive tasks.
+
+Sample Syntax // Declaring a virtual register register r1 = 0x01;
+
+// Pointers and working with memory let *buffer: u8[256] = 0x8000;
+
+// Copying memory mem_copy(buffer, src, 256);
+
+// Loop and multithreading thread main { while (true) { r1 += 1;
+if (interrupt()) { handle_interrupt();
+} } } Technology and Architecture Ecosystem Compiler The compiler will be responsible for translating the code into the machine language of a specific architecture, performing optimizations and security analysis.
+
+Development Environment and Debugger IDE with an integrated debugger, support for simulation, performance analysis, and a convenient interface for tracking code execution.
+
+Documentation and Tutorials Open documentation, training courses, code samples, and articles on the topic will help new users master the language.
+
+Developer Community and Support A platform for feedback and discussions, regular updates, and collaboration on language improvements.
+
+Development Stages Research and Design Studying existing approaches in low-level languages.
+Defining key functions and syntactic constructs.
+Compiler and core library development Create a minimal version of the compiler.
+Implement basic commands and data structures.
+Create a debugging environment and test Develop tools for testing and debugging.
+Extensive testing on various architectures.
+Release a beta version and feedback Launch a beta version for a limited number of developers.
+Collect feedback and fix bugs.
+Public launch and build a community Open launch of the language and build a developer community.
+Regular updates and support for the language.
+Conclusion This manifesto describes an ambitious but achievable plan for creating an alternative low-level programming language that is designed to simplify and modernize programming systems while maintaining a high level of control and productivity. We encourage all enthusiasts, developers, and researchers to join the project and contribute to the development of a new, powerful and safe tool for working with the system at the most basic level.
+
+Let's call the language "CoreLang".
+
+Introduction CoreLang is a low-level language designed for programming operating system kernels, drivers, bootloaders, and other system applications. Its goal is to give developers full control over the hardware while maintaining enhanced security, readability, and efficient multi-architecture support. CoreLang is different from existing languages ​​​​in that it is highly readable, without danger and support for cross-platform development for various hardware architectures.
+
+Basic Principles and Ideology Control over hardware: CoreLang provides the developer with access to all levels of working with hardware, from registers and interrupts to working with memory.
+
+Security: To prevent typical errors of low-level programming (buffer overflow, incorrect pointers), CoreLang has built-in mechanisms for checking boundaries and tools for handling exceptions at the language level.
+
+Simplifying syntax and increasing readability: CoreLang strives to simplify the syntax, preserving the powerful capabilities of Assembler, but adding developer-friendly constructs.
+
+Architectural independence: Support for major platforms such as x86, ARM, and RISC-V will be implemented through a compiler that will allow you to write code once and adapt it to the desired architecture.
+
+Syntax and Architecture Concepts 1. Data types and their naming CoreLang supports basic low-level data types, including integers, bytes, pointers, and special types for working with registers and memory.
+
+u8, u16, u32, u64: Unsigned integers.
+i8, i16, i32, i64: Signed integers.
+reg: Special type for working with processor registers.
+ptr: Pointer to any data type.
+Example of use: let counter: u8 = 0x00;
+let mem_ptr: ptr u8 = 0x1000; // Pointer to memory area let reg_acc: reg = 0x01; // Accumulator register 2. Pointers and Memory Handling CoreLang provides a convenient syntax for working with pointers and memory, where programmers can safely work with dereference operations and pointer manipulations.
+
+let buffer: ptr u8[256] = 0x8000; // Pointer to an array of 256 bytes *buffer = 0xAA; // Write to the first byte of the array 3. Memory and Register Primitives To improve code readability, CoreLang includes built-in functions for working with memory and registers, such as mem_copy, mem_set, reg_write, and reg_read.
+
+mem_copy(dest: ptr u8, src: ptr u8, length: u16); // Copy from src to dest reg_write(r: reg, value: u8); // Write to a register let reg_val = reg_read(r: reg); // Read a register 4. Structures and Code Blocks CoreLang supports simple data structures such as struct to group data. This is especially useful for low-level programming where data may be tightly coupled to hardware resources.
+
+struct MemoryBlock { base_addr: ptr u8;
+size: u16;
+status: u8;
+} let block = MemoryBlock(base_addr: 0x8000, size: 256, status: 0x01);
+
+5. Flow Control and Loops CoreLang supports basic flow control structures such as while and for loops, and if conditional statements.
+
+let counter: u8 = 0;
+while (counter < 10) { counter += 1;
+if (counter == 5) { break;
+} } Integration with Hardware CoreLang provides full access to registers, memory, and interrupts, making it suitable for low-level programming.
+
+Interrupts Interrupts are an important part of system programming. CoreLang provides syntax for defining and handling interrupts, simplifying the development of drivers and the operating system kernel.
+
+interrupt handler INT0 { // Code for handling the INT0 interrupt reg_write(reg_acc, 0xFF); // Example of writing to a register } Special Instructions and Assembly Inserts To improve performance and flexibility, CoreLang supports assembly code inserts and special instructions that allow programmers to have maximum control over the processor.
+
+asm { MOV AX, BX; // Assembly instruction } Optimization and Performance Automatic and Manual Optimization CoreLang provides automatic mechanisms for code optimization at the compile level, and also allows manual performance control in critical sections of code.
+
+Loop unrolling: Design optimized instructions for loops.
+Branch prediction: The compiler will analyze the code and use prediction techniques to speed up execution.
+Example of manual optimization: optimize begin // Critical section of code mem_copy(dest, src, 256);
+optimize end Multitasking and Asynchrony CoreLang supports basic constructs for multitasking, which allows working with multithreaded applications and asynchronous calls, which are important for systems programming.
+
+thread process1 { // Code for thread process1 } thread process2 { // Code for thread process2 } CoreLang Tools and Ecosystem CoreLang Compiler (clc) The core compiler clc will translate CoreLang code into machine instructions, supporting multiple architectures (x86, ARM, RISC -V).
+
+CoreIDE Development Environment CoreIDE is an integrated development environment that includes a powerful debugger, profiler, and performance analysis tools.
+
+Debugging and Profiling CoreLang provides powerful tools for analyzing.
+
+yes, debugging and profiling, which helps in creating high-performance programs.
+
+Sample Full Program on CoreLang // Register and buffer initialization let reg1: reg = 0x01;
+let buffer: ptr u8[256] = 0x8000;
+
+// Function for memory initialization func initialize_memory() { mem_set(buffer, 0x00, 256);
+} // Main program main { initialize_memory();
+
+while (true) { reg1 += 1;
+if (interrupt_occurred()) { handle_interrupt();
+} } } // Interrupt handler interrupt handler INT0 { reg_write(reg1, 0xFF);
+} Development Roadmap Research and Planning: Study the requirements and capabilities of low-level languages.
+
+Syntax Creation and Architecture Design: Develop standards and basic syntax structure.
+
+Compiler Implementation and Testing: Develop clc and basic libraries.
+
+Preview Release Once the basic compiler features and initial library are complete, a preview version of CoreLang will be released for internal testing and feedback from early adopters. At this stage, it is important to ensure support for the underlying platforms (e.g. x86 and ARM) and to create tests to verify the functionality of the language.
+
+Expanding the Ecosystem and Toolkit Developing additional tools such as the CoreIDE (integrated development environment), code optimizer, profiler, and an improved debugger. Also planned for this stage is the addition of a standard system call library and documentation on how to use the language and toolkit.
+
+Support for Additional Architectures After successful implementation and testing on the main architectures, CoreLang is planned to be adapted for other architectures such as RISC-V and MIPS. At this stage, the ability to recompile for cross-platform use will also be added.
+
+Community and open development We plan to attract developers and system programming specialists to participate in the project, create and maintain an active community, and add opportunities for users to suggest improvements. We will also organize an open source repository and develop detailed guidelines for contributors.
+
+Release of a stable version and documentation The final release with completed documentation, support for all declared features and instructions for deployment on all target platforms. The main focus will be on stability, performance and ease of development using CoreLang.
+
+Approximate Structure of the CoreLang Repository /compiler - source code of the CoreLang compiler (clc), including the optimizer, parser and backend for different architectures.
+/libraries -standard libraries for working with memory, registers and interrupts.
+/ide - source code of CoreIDE, supporting the development and debugging of programs on CoreLang.
+/docs - full documentation, including developer's guide, syntax description and examples.
+/tests — tests to check CoreLang functionality on different architectures.
+/examples — CoreLang example programs for various scenarios, from basic drivers to miniature operating systems.
+License and Distribution Policy CoreLang will be distributed under the MIT license, which will provide freedom to use, modify and distribute the language for both personal and commercial purposes. This will allow the language to evolve quickly and adapt to changes in the field of systems programming.
+
+Conclusion CoreLang is designed to give developers powerful and controlled access to hardware, while maintaining simplicity, flexibility and high security. With its well-thought-out syntax and powerful tooling, it will be accessible not only to experienced systems programmers, but also to novice engineers who want to learn the basics of low-level programming. CoreLang will become a new foundation for developing operating systems, bootloaders, drivers and other critical components that require maximum performance and reliability.
+
+This manifesto serves as a guide for creating a language that is unique in its capabilities and approaches, with an emphasis on stability, performance, and usability.
